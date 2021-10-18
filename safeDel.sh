@@ -42,17 +42,21 @@ deleteTrashCanContent()
 
 displayTotalUsage()
 {
-  echo "The display Total Usage"
+	totalUsage=$(du -cb --exclude=*/\.* ~/.trashCan| awk '{print $1}')
+
+	echo "The total usage of the Trash Can directory is: $totalUsage bytes."
 }
 
 startMonitor()
 {
-   echo "The monitor function"
+    bash monitor.sh &
+
 }
 
 killMonitorProcesses()
 {
-   echo "The track monitor process"
+    pidof=$(pidof inotifywait)
+    kill $pidof
 }
 
 recoverFile()
@@ -104,6 +108,7 @@ optionDrivenMenu()
  done 
  if [[ "$#" == "0" ]]; then
 	 displayMenu;
+	 return;
  
  fi 	 
 
