@@ -49,6 +49,7 @@ displayTotalUsage()
 
 startMonitor()
 {
+    		
     bash monitor.sh &
 
 }

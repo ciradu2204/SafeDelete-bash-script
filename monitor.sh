@@ -3,38 +3,43 @@
 echo "Name: Cynthia Iradukunda" 
 echo "Id: S10103"
 
-folder="~/.TrashCan"
-
+FOLDER=~/.trashCan
+lastDate=$(date "+T%")
+numberOfFiles=$(ls | wc -l)
 
 trackFolderDeletions (){
-echo "file deleted"
 
+numberOfFilesNow=$(ls | wc -l ) 
+
+if[ numberOfFilesNow -lt  numberOfFiles ]; then
+	echo "The files deleted in the last 15 s: $((numberOfFiles - numberOfFilesNow))"
+elif
+	echo "The files deleted in the last 15 s: 0" 
+fi  
 }
 
 trackFolderAddition (){
-
-numberOfFiles= find $folder -type f -cmin 15s | wc -l 
+numberOfFiles=$(find $FOLDER -type f -cmin 0.4 | wc -l) 
 echo "The Files that were added in the last 15s: $numberOfFiles"
-find $folder -type f -cmin 15s
-
+find $FOLDER -type f -cmin 0.4
 }
 
 trackFolterModified (){
-
-numberOfFiles= find $folder -type f -mmin 15s | wc -l
+numberOfFiles=$(find $FOLDER -type f -mmin 0.4 | wc -l)
 echo "The Files that were modified in the last 15s: $numberOfFiles"
-find $folder -type f -mmin 15s
-
-
+find $FOLDER -type f -mmin 0.4
 }
 
-osascript -e 'tell app "Terminal"
-echo "Last thing"
-end tell'
-while(true){
-trackFolderAddition()
-trackFolderModified() 
-sleep 15s
 
+while(true){
+sleep 15
+reset 
+dateNow=$(date "+%T")
+echo"==================================================="
+echo"Trash Can directory report from $date to $dateNow"
+echo"==================================================="
+numberOfFilesNow
+trackFolderAddition
+trackFolderModified 
 }
 
