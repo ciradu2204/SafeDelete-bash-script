@@ -20,8 +20,8 @@ doesTrashCanExist()
 listContent()
 {
    if [ "$(ls -a $FOLDER)" ];
-   then	   
-        ls -als $FOLDER
+   then	   echo " "
+	   ls -l $FOLDER | awk  'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"} NR!=1{print $9 " " substr($1, 0, 1) " " $5}' | column -t
    else 
         echo "The Trash Can is empty"
    fi	
@@ -84,9 +84,17 @@ recoverFile()
 
 safeDelete()
 {
-      File="$@"
       
-       mv -t $FOLDER $File
+      for var in $@
+      do      
+	if [ ! -f "$var" ]; then	       	
+	echo "$var is not a file."	
+        return; 
+	fi     
+	
+      done
+
+      mv -t "$FOLDER" "$File"
        
       if [ $? -eq 0 ]
       then 
