@@ -4,6 +4,7 @@ echo "Cynthia Iradukunda"
 echo "S3458858"
 
 FOLDER=~/.trashCan
+TotalUsage=0
 
 trap trapFunction SIGINT
 
@@ -42,21 +43,29 @@ deleteTrashCanContent()
 
 displayTotalUsage()
 {
-	totalUsage=$(du -cb --exclude=*/\.* ~/.trashCan| awk '{print $1}')
-
+	totalUsage=$(du -cba  ~/.trashCan | awk '{print $1; exit}')
+        TotalUsage=$totalUsage  
 	echo "The total usage of the Trash Can directory is: $totalUsage bytes."
 }
 
 startMonitor()
-{
-    		
-    bash monitor.sh &
+{	
+    if [[ $( dpkg-query -W -f='${status}' mate-terminal 2>/dev/null | grep -c "install ok installed" ) -eq 0 ]]
+    then
+    echo "======================================================================="	    
+    echo "Installing mate terminal to open the monitor report in a new window..."
+    echo "======================================================================="   
+    sudo apt-get -qy install  mate-terminal
+    mate-terminal -e  "bash monitor.sh" &
+    else
+    mate-terminal -e "bash monitor.sh " &    
+    fi
 
 }
 
 killMonitorProcesses()
 {
-    pidof=$(pidof inotifywait)
+    pidof=$(pidof mate-terminal)
     kill $pidof
 }
 
@@ -76,21 +85,24 @@ recoverFile()
 safeDelete()
 {
       File="$@"
-      if [ ! -f "$File" ]; then
-
-       echo "File not recognised.Check if you have given the full absolute path to the file if it is not in the current directory."
-
-       else
-	  mv $File $FOLDER
-	  echo "$File file has been deleted"
-       fi	
+      
+       mv -t $FOLDER $File
+       
+      if [ $? -eq 0 ]
+      then 
+         echo "$File deleted successfully"
+      else
+         echo "Try again,$File not deleted. Check to see if you have provided the correct  absolute path." 
+      fi	 
 
 }
 
 trapFunction()
 {	
  numberOfFiles=$(find $FOLDER -type f | wc -l)
+ echo ""
  echo "The number of files in the TrashCan folder are: $numberOfFiles"
+ exit
 }
 
 optionDrivenMenu()
@@ -121,8 +133,9 @@ optionDrivenMenu()
 
 displayMenu()
 {
-  echo "============Safe Delete Menu=================="
-  userOption="Please Enter your choice: "
+  echo "============================================================================"
+  echo " Safe Delete Menu (Please enter a number assosiated with an option you want)"
+  echo "============================================================================"
   options=(-l -r -d -t -m -k Quit )
   
   select opt in "${options[@]}"
@@ -141,6 +154,14 @@ displayMenu()
 done	
 }
 
+checkIfTotalUsageExceed(){
+    if [[ "$TotalUsage" -gt 1000 ]]
+    then
+         echo "Warning: the trash can directory exceeds 1Kbytes"
+     fi
+
+
+}
 
 
 startApp()
@@ -148,5 +169,6 @@ startApp()
 
 doesTrashCanExist
 optionDrivenMenu "$@"
+checkIfTotalUsageExceed
 }
 startApp "$@"
