@@ -4,7 +4,6 @@ echo "Cynthia Iradukunda"
 echo "S3458858"
 
 FOLDER=~/.trashCan
-TotalUsage=0
 
 trap trapFunction SIGINT
 
@@ -19,12 +18,17 @@ doesTrashCanExist()
 
 listContent()
 {
-   if [ "$(ls -a $FOLDER)" ];
+   if [ ! $(ls -a $FOLDER| wc -l) -eq 0 ];
    then	   echo " "
-	   ls -l $FOLDER | awk  'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"} NR!=1{print $9 " " substr($1, 0, 1) " " $5}' | column -t
+	   ls -l $FOLDER | awk -v Folder="$FOLDER/" filetypeFunction=findFileType 'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"} NR!=1{print $9 system('findFileType $9') $5}' | column -t
    else 
         echo "The Trash Can is empty"
    fi	
+}
+
+findFileType(){
+ echo "$9"
+
 }
 
 deleteTrashCanContent()
@@ -43,8 +47,7 @@ deleteTrashCanContent()
 
 displayTotalUsage()
 {
-	totalUsage=$(du -cba  ~/.trashCan | awk '{print $1; exit}')
-        TotalUsage=$totalUsage  
+	totalUsage=$(du -cba  ~/.trashCan | awk '{print $1; exit}') 
 	echo "The total usage of the Trash Can directory is: $totalUsage bytes."
 }
 
@@ -66,20 +69,37 @@ startMonitor()
 killMonitorProcesses()
 {
     pidof=$(pidof mate-terminal)
-    kill $pidof
+
+    if [[ $? -eq 0 ]]
+    then 
+	 echo "Killing the monitor script process...."
+         kill $pidof
+    else
+	 echo "The monitor script process has not yet started. Please start it using the -m option" 
+    fi
 }
 
 recoverFile()
 {
+      File_name=
 
-	workingDirectory=$(pwd)
-	
-	if [ ! -f "$FOLDER/$OPTARG" ]; then 
-	 echo "$OPTARG file is not recognised. Check if it exists in the trash Can directory."
+        if [[ ! -v OPTARG ]]
+	then
+           echo "Enter the name of the file from the trash can you want to recover"
+	   read file_name
+	   File_name=$file_name
+	 else
+	    File_name=$OPTARG	 
+	fi
+
+	 workingDirectory=$(pwd)
+	 if [ ! -f "$FOLDER/$File_name" ]; then 
+	     echo "$File_name file is not recognised. Check if it exists in the trash Can directory."
          else
-		 mv "$FOLDER/$OPTARG" $workingDirectory
-		 echo "$OPTARG file recovered"
-         fi		 
+              mv "$FOLDER/$File_name" $workingDirectory
+	      echo "$File_name file recovered"
+         fi
+       	  
 }
 
 safeDelete()
@@ -94,14 +114,14 @@ safeDelete()
 	
       done
 
-      mv -t "$FOLDER" "$File"
+      mv -t "$FOLDER" "$@"
        
       if [ $? -eq 0 ]
       then 
-         echo "$File deleted successfully"
+         echo "$@ deleted successfully"
 	 checkIfTotalUsageExceed
       else
-         echo "Try again,$File not deleted. Check to see if you have provided the correct  absolute path." 
+         echo "Try again,$@ not deleted. Check to see if you have provided the correct  absolute path." 
       fi	 
 
 }
@@ -145,17 +165,17 @@ displayMenu()
   echo "============================================================================"
   echo " Safe Delete Menu (Please enter a number assosiated with an option you want)"
   echo "============================================================================"
-  options=(-l -r -d -t -m -k Quit )
+  options=("List files" "Recover file(s)" "Delete files" "Display disk usage" "Start monitoring" "Kill monitoring process" Quit )
   
   select opt in "${options[@]}"
    do 
        case $opt in
-	"-l") listContent;;
-	"-r") recoverFile;;
-	"-d") deleteTrashCanContent;;
-	"-t") displayTotalUsage;;
-	"-m") startMonitor;;
-	"-k") killMonitorProcesses;;
+	"List files") listContent;;
+	"Recover file(s)") recoverFile;;
+	"Delete files") deleteTrashCanContent;;
+	"Display disk usage") displayTotalUsage;;
+	"Start monitoring") startMonitor;;
+	"Kill monitoring process") killMonitorProcesses;;
         "Quit") break;;	 
         *)
 		echo "invalid option"
@@ -164,6 +184,8 @@ done
 }
 
 checkIfTotalUsageExceed(){
+    
+    TotalUsage=$(du -cba  ~/.trashCan | awk '{print $1; exit}')
     if [[ "$TotalUsage" -gt 1000 ]]
     then
          echo "Warning: the trash can directory exceeds 1Kbytes"
