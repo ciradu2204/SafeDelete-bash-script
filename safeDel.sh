@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Cynthia Iradukunda" 
-echo "S3458858"
+echo "S1906581"
 
 FOLDER=~/.trashCan
 
@@ -18,10 +18,15 @@ doesTrashCanExist()
 
 listContent()
 {
-   if [ ! $(ls -a $FOLDER| wc -l) -eq 0 ];
+ 	
+   if [ ! $(ls $FOLDER| wc -l) -eq 0 ];
    then	   
-       echo " "
-       ls -l $FOLDER | awk -v Folder="$FOLDER/" 'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"}NR!=1{print $9" "$1" "$5}'| column -t
+      echo " "
+      echo "Different file types: 1.-:regular files, 2. d:directory, 3. c:character device file 4. b:block device file 5. s:local socket file 6.p:named piple 7.l:symbolic link"
+      echo " "    
+      ls -l $FOLDER | awk 'BEGIN{
+      print "File-Name " "File-Type " "File-Size(Bytes)"
+      }NR!=1{print $9" "substr($1,0,1)" "$5}'| column -t
    else 
         echo "The Trash Can is empty"
    fi	
@@ -60,9 +65,9 @@ startMonitor()
     echo "Installing mate terminal emulator to open the monitor report in a new window..."
     echo "==============================================================================="   
     sudo apt-get -qy install  mate-terminal
-    mate-terminal -e  "bash monitor.sh" &
+    mate-terminal -e "bash monitor.sh" &
     else
-    mate-terminal -e "bash monitor.sh " &    
+    mate-terminal -e "bash monitor.sh" &    
     fi
 
 }
@@ -149,13 +154,12 @@ optionDrivenMenu()
    r) recoverFile "$OPTARG";;
     esac
  done 
- if [[ "$#" == "0" ]]; then
+ if [[ "$#" == 0 ]]; then
 	 displayMenu;
-	 return;
  
  fi 	 
 
- if [ "$OPTIND" == "1" ]
+ if [ "$OPTIND" == 1 ]
  then 
 	 safeDelete "$@"
  fi	 

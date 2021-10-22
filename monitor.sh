@@ -1,7 +1,7 @@
 #!bin/bash
 
 echo "Name: Cynthia Iradukunda" 
-echo "Id: S10103"
+echo "Id: S1906581"
 echo "Monitoring started...."
 
 FOLDER=~/.trashCan

@@ -1,76 +1,90 @@
 #!bin/bash
 
 echo "Name: Cynthia Iradukunda" 
-echo "Id: S10103"
+echo "Id: S1906581"
 echo "Monitoring started...."
-
-# A constant variable to store the trash Can directory path. 
+#A constant variable  with the path name
 FOLDER=~/.trashCan
 
-# A variable to store the last time the monitoring happened.
+#A variable to store the last date the monitoring happened.
 lastDate=$(date "+%T")
 
-# A variable to store the number of files the trashCan directory had, the last time the monitoring happened.  
-numberOfFiles=$(ls | wc -l)
+#A variable to store the last number of files that were in the trash can directory to help with tracking deletion"
+numberOfFiles=$(ls $FOLDER| wc -l)
 
-# A function to track the deletions in the trash Can. 
+#The seconds to be used when tracking file changes. 
+time=0,4
+
+#A function to track folder deletions by first changing if the last identified number of files has changed. If the number reduced then, it prints the number of files that were deleted. 
 trackFolderDeletions (){
 
-numberOfFilesNow=$(ls | wc -l ) 
-
-# Check to see if the number of files now are less than the numberOFfiles obtained when the last monitoring happened. If true, calculate the number of files deleted. Otherwise print the number as 0. 
+numberOfFilesNow=$(ls $FOLDER| wc -l)
 if [ $numberOfFilesNow -lt $numberOfFiles ]
 then
+
 	echo "The files deleted in the last 15 s: $(($numberOfFiles - $numberOfFilesNow))"
-	numberOfFiles=$numberOfFilesNow
 else
 	echo "The files deleted in the last 15 s: 0" 
-fi  
+fi
+
+numberOfFiles=$numberOfFilesNow
 }
 
-# A frunction to track the addition of files in the trash Can. 
-
+#A function to track the addition of files.By using the -cmin option on the find command, it shows the files that were create
+#in the last 15s. 
 trackFolderAddition (){
 
-# Store the number of files created in the last 15 min.  
-numberOfFiles=$(find $FOLDER -type f -cmin 0.4 | wc -l) 
+numberOfFilesAdded=$(find $FOLDER -type f -cmin $time | wc -l)
 
-echo "The Files that were added in the last 15s: $numberOfFiles"
+echo "The Files that were added in the last 15s: $numberOfFilesAdded"
 
-# Print the path of the files created in the last 15 min. 
-find $FOLDER -type f -cmin 0.4
+find $FOLDER -type f -cmin $time
 
 }
 
+#A function to track the modification of files. By using the -mmin option on the find command, it shows the files that were modified in the last 15s.
 trackFolderModified (){
 
-#Store the number files created modified in the last 15 min. 
-numberOfFiles=$(find $FOLDER -type f -mmin 0.4 | wc -l)
+numberOfFileModified=$(find $FOLDER -type f -mmin $time | wc -l)
 
-echo "The Files that were modified in the last 15s: $numberOfFiles"
+echo "The Files that were modified in the last 15s: $numberOfFileModified "
 
-#Print the path to the number of files modified in the last 15 min. 
-find $FOLDER -type f -mmin 0.4
+find $FOLDER -type f -mmin $time
 
 }
 
-# Run a loop to continously run all those functions.  
+#A function to list the number of files in the trash can every 15 s. 
+listFilesInTrashCan (){
+
+	if [ ! $(ls $FOLDER |wc -l) -eq 0 ]
+	then 
+	      echo "The files in the trash can directory"	
+	      ls  $FOLDER
+        else
+	      echo "The trash can is empty"
+	fi
+
+}
+
+#A while loop to run which runs the functions bellow continously unless the script is killed. 
 while [ true ]
 do
-
-#Sleep for 15 min to only give the report after 15 min. 	
 sleep 15
-
-#Reset the window terminal incase it still displays the last report. 
-reset 
-
 dateNow=$(date "+%T")
-
 echo "==================================================="
-echo "Trash Can directory report from $lastDate of $dateNow"
+echo "Trash Can directory report from $lastDate to $dateNow"
 echo "==================================================="
+listFilesInTrashCan
+echo " "
 trackFolderDeletions
+echo " "
 trackFolderAddition
-trackFolderModified 
+echo " "
+trackFolderModified
+echo "==================================================="
+echo "             End of Report                         "
+echo "==================================================="
+echo " "
+lastDate=$dateNow
 done
 
