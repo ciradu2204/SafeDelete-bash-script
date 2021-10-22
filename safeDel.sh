@@ -19,8 +19,9 @@ doesTrashCanExist()
 listContent()
 {
    if [ ! $(ls -a $FOLDER| wc -l) -eq 0 ];
-   then	   echo " "
-	   ls -l $FOLDER | awk -v Folder="$FOLDER/" filetypeFunction=findFileType 'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"} NR!=1{print $9 system('findFileType $9') $5}' | column -t
+   then	   
+       echo " "
+       ls -l $FOLDER | awk -v Folder="$FOLDER/" 'BEGIN{print "File-Name " "File-Type " "File-Size(Bytes)"}NR!=1{print $9" "$1" "$5}'| column -t
    else 
         echo "The Trash Can is empty"
    fi	
@@ -73,7 +74,7 @@ killMonitorProcesses()
     if [[ $? -eq 0 ]]
     then 
 	 echo "Killing the monitor script process...."
-         kill $pidof
+         killall mate-terminal
     else
 	 echo "The monitor script process has not yet started. Please start it using the -m option" 
     fi
